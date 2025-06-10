@@ -1,0 +1,78 @@
+﻿<!DOCTYPE html>
+<html>
+<!-- [if IE 8]>			<html class="ie ie8"> <![endif]-->
+<!-- [if IE 9]>			<html class="ie ie9"> <![endif]-->
+<!-- [if gt IE 9]><html> <![endif] -->
+
+<head>
+    <!-- Meta -->
+    <meta charset="utf-8">
+    <meta content="HTML5 Template" name="keywords" />
+    <meta content="" name="description">
+    <meta content="" name="author">
+    <title>Jayasundara Construction</title>
+    <!-- Mobile Metas -->
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <!-- Favicon -->
+    <link href="images/favicon.ico" rel="shortcut icon">
+    <!-- font-awesome -->
+    <link href="css/font-awesome/css/font-awesome.css" media="screen" rel="stylesheet" type="text/css">
+    <!-- bootstrap -->
+    <link href="css/bootstrap.min.css" media="screen" rel="stylesheet" type="text/css">
+    <!-- flaticon -->
+    <link href="css/flaticon/css/flaticon.css" media="screen" rel="stylesheet" type="text/css">
+    <!-- owl-carousel -->
+    <link href="css/owl.carousel.css" media="screen" rel="stylesheet" type="text/css">
+    <link href="css/owl.theme.css" media="screen" rel="stylesheet" type="text/css">
+    <!-- sidebar on small screens -->
+    <link href="css/easy-sidebar.css" media="screen" rel="stylesheet" type="text/css">
+    <!-- prettyPhoto -->
+    <link href="js/pp/css/prettyPhoto.css" media="screen" rel="stylesheet" type="text/css">
+    <!-- isotope -->
+    <link href="js/vendors/isotope/isotope.css" media="screen" rel="stylesheet" type="text/css">
+    <!-- preloader CSS -->
+    <link href="css/spinkit/spinkit.css" media="screen" rel="stylesheet" type="text/css">
+    <!-- Main CSS -->
+    <link href="css/style.css" media="screen" rel="stylesheet" type="text/css">
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!-- [if lt IE 9]>
+         <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+         <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+         <![endif]-->
+</head>
+
+<body id="countdown-wrap">
+    <div class="container text-center text-uppercase"> <img src="images/logo-light.png" class="img-responsive center-block" alt="" />
+        <p>We Are Glad To See You, But Please Be Patient,
+            <br> This Page Is Under Construction.</p>
+        <div id="ctimer"></div>
+        <div class="copyright">&copy; 2025 Jayasundara Construction</div>
+    </div>
+    <!-- jquery -->
+    <script src="js/jquery.js"></script>
+    <!-- bootstrap -->
+    <script src="js/bootstrap.min.js"></script>
+    <!-- twitter -->
+    <script src="js/twitter.js"></script>
+    <!-- counterup -->
+    <script src="js/waypoints.min.js"></script>
+    <script src="js/vendors/jquery.counterup.min.js"></script>
+    <!-- isotope -->
+    <script src="js/vendors/isotope/isotope.pkgd.js"></script>
+    <!-- isotope main -->
+    <!-- Main Javascript -->
+    <!-- For demo purposes only styleswitcher ( You may delete this anytime ) -->
+    <script src="js/jquery.style.switcher.js"></script>
+    <script src="js/main.js"></script>
+  
+    <script src="http://cdn.rawgit.com/hilios/jQuery.countdown/2.1.0/dist/jquery.countdown.min.js"></script>
+    <script type="text/javascript">
+        jQuery("#ctimer").countdown("2025/07/01", function (event) {
+            jQuery(this).html(event.strftime('<div class="ct-block">%D<span>days</span></div><div class="ct-block">%H<span>Hours</span></div><div class="ct-block">%M<span>Minutes</span></div><div class="ct-block">%S<span>Seconds</span></div>'));
+        });
+    </script>
+</body>
+
+</html>
