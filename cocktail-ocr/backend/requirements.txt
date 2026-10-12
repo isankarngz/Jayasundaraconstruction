@@ -1,0 +1,10 @@
+# Versions verified together (Python 3.10-3.13). The OCR models ship inside the
+# rapidocr wheel, so no model download or network access happens at runtime.
+fastapi>=0.110,<1
+uvicorn[standard]>=0.29
+python-multipart>=0.0.9
+pillow>=10.3
+numpy>=1.26
+opencv-python-headless>=4.9
+onnxruntime>=1.17
+rapidocr_onnxruntime==1.2.3
