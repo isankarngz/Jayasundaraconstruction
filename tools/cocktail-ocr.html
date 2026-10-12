@@ -10,12 +10,14 @@
   :root {
     --bg: #f6f7f9; --panel: #ffffff; --text: #1b1f24; --muted: #5f6b7a; --border: #dde2e8;
     --accent: #2f6fde; --accent-text: #ffffff; --hit: #1f8a4c; --hit-bg: #e3f5ea;
+    --name: #8a4bd1; --name-bg: #f1e8fb;
     --miss: #6b7480; --miss-bg: #eef0f3; --err: #c23b3b; --err-bg: #fbe7e7; --mark: #ffe58a;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --bg: #121417; --panel: #1b1e23; --text: #e6e9ee; --muted: #9aa4b2; --border: #2c3138;
       --accent: #5b8ff0; --accent-text: #0d1117; --hit: #5fd08f; --hit-bg: #17321f;
+      --name: #c49af5; --name-bg: #2c1f3d;
       --miss: #9aa4b2; --miss-bg: #23272e; --err: #ff8080; --err-bg: #3a1c1c; --mark: #7a6514;
     }
   }
@@ -24,25 +26,33 @@
          font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
   main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 64px; }
   h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  h2 { font-size: 1rem; margin: 0 0 10px; }
   .sub { color: var(--muted); margin: 0 0 20px; }
   .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
-  .drop { border: 2px dashed var(--border); border-radius: 10px; padding: 28px 16px; text-align: center; color: var(--muted); transition: .15s; }
+  .drop { border: 2px dashed var(--border); border-radius: 10px; padding: 24px 16px; text-align: center; color: var(--muted); transition: .15s; }
   .drop.over { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  .hint { font-size: .85rem; color: var(--muted); margin-top: 10px; }
   .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
   .row + .row { margin-top: 12px; }
   button, .btn { font: inherit; border: 1px solid var(--border); background: var(--panel); color: var(--text);
                  padding: 8px 14px; border-radius: 8px; cursor: pointer; }
-  button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+  .primary { background: var(--accent) !important; color: var(--accent-text) !important; border-color: var(--accent) !important; font-weight: 600; }
+  .big { font-size: 1.05rem; padding: 12px 22px; }
   button:disabled { opacity: .5; cursor: not-allowed; }
   label.opt { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); font-size: .9rem; }
-  select { font: inherit; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--border); background: var(--panel); color: var(--text); }
+  select, input[type=number], input[type=search], textarea {
+    font: inherit; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--panel); color: var(--text); }
+  input[type=number] { width: 4.5em; }
+  input[type=search] { flex: 1; min-width: 180px; padding: 7px 10px; }
+  textarea { width: 100%; min-height: 70px; font-size: .85rem; margin-top: 8px; resize: vertical; }
   input[type=file] { display: none; }
+  .settings { display: grid; gap: 12px; margin-top: 14px; border-top: 1px solid var(--border); padding-top: 14px; }
   .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
   .stat { background: var(--bg); border-radius: 8px; padding: 10px 12px; }
   .stat b { display: block; font-size: 1.4rem; }
   .stat span { color: var(--muted); font-size: .85rem; }
   .bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-top: 12px; }
-  .bar > div { height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+  .bar > div { height: 100%; width: 0; background: var(--accent); }
   .tabs button.active { border-color: var(--accent); color: var(--accent); font-weight: 600; }
   .list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
   .item { display: flex; gap: 12px; align-items: flex-start; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 10px; }
@@ -50,8 +60,9 @@
   .info { min-width: 0; flex: 1; }
   .name { font-weight: 600; word-break: break-all; }
   .folder { color: var(--muted); font-size: .85rem; word-break: break-all; }
-  .badge { display: inline-block; font-size: .8rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; margin-top: 4px; }
+  .badge { display: inline-block; font-size: .8rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; margin: 4px 4px 0 0; }
   .b-hit { color: var(--hit); background: var(--hit-bg); }
+  .b-name { color: var(--name); background: var(--name-bg); }
   .b-miss { color: var(--miss); background: var(--miss-bg); }
   .b-err { color: var(--err); background: var(--err-bg); }
   .b-wait { color: var(--muted); background: var(--bg); }
@@ -60,6 +71,7 @@
   details { margin-top: 4px; font-size: .85rem; }
   details pre { white-space: pre-wrap; word-break: break-word; background: var(--bg); padding: 8px; border-radius: 6px; max-height: 240px; overflow: auto; }
   .empty { color: var(--muted); text-align: center; padding: 20px; }
+  #more { align-self: center; margin-top: 6px; }
   #viewer { position: fixed; inset: 0; background: rgba(0,0,0,.85); display: none; align-items: center; justify-content: center; z-index: 10; cursor: zoom-out; }
   #viewer img { max-width: 95vw; max-height: 95vh; }
 </style>
@@ -67,32 +79,43 @@
 <body>
 <main>
   <h1>Cocktail OCR Finder</h1>
-  <p class="sub">Pick your images folder (sub-folders included). Each image is read with OCR and flagged if it contains “Cocktail” and/or “Cocktails”. Nothing is uploaded; everything runs in this browser.</p>
+  <p class="sub">Select your main folder once. Every image in all of its sub-folders is read with OCR and flagged if it shows the word “Cocktail” / “Cocktails” or the names of cocktail drinks. Nothing is uploaded; everything runs in this browser.</p>
 
   <div class="panel">
     <div class="drop" id="drop">
-      <div style="font-size:1.05rem;margin-bottom:10px">Drag &amp; drop a folder here, or</div>
-      <div class="row" style="justify-content:center">
-        <label class="btn" for="dirInput">Choose folder…</label>
-        <label class="btn" for="fileInput">Choose image files…</label>
-      </div>
+      <label class="btn primary big" for="dirInput">📁 Select main folder</label>
+      <div class="hint">Pick the <b>one main folder</b> that holds all your image folders and click <b>Upload</b>. All sub-folders are included automatically.<br>
+        Your browser may ask “Upload N files to this site?”. That is only a browser permission prompt: the files stay on your computer.<br>
+        You can also drag the main folder onto this box, or <label for="fileInput" style="text-decoration:underline;cursor:pointer">pick individual images</label>.</div>
       <input type="file" id="dirInput" webkitdirectory directory multiple>
       <input type="file" id="fileInput" accept="image/*" multiple>
-      <div id="loaded" style="margin-top:10px"></div>
+      <div id="loaded" style="margin-top:10px;font-weight:600"></div>
     </div>
 
     <div class="row" style="margin-top:14px">
       <button class="primary" id="startBtn" disabled>Start OCR</button>
       <button id="stopBtn" disabled>Stop</button>
-      <label class="opt">Parallel workers
-        <select id="workers"></select>
-      </label>
-      <label class="opt" title="Also catch common OCR misreads like C0CKTA1L or 'cock tail'">
-        <input type="checkbox" id="lenient" checked> Lenient matching
-      </label>
-      <label class="opt" title="If nothing is found, retry the image rotated 90°, 180° and 270° (slower)">
-        <input type="checkbox" id="rotate"> Try rotated images
-      </label>
+      <label class="opt">Parallel workers <select id="workers"></select></label>
+    </div>
+
+    <div class="settings">
+      <div class="row">
+        <label class="opt" title="Also catch common OCR misreads like C0CKTA1L or 'cock tail'">
+          <input type="checkbox" id="lenient" checked> Lenient “Cocktail” spelling</label>
+        <label class="opt" title="If nothing is found, retry the image rotated 90°, 180° and 270° (slower)">
+          <input type="checkbox" id="rotate"> Try rotated images</label>
+        <label class="opt" title="Skip images already scanned in this browser when you run again (survives closing the tab)">
+          <input type="checkbox" id="useCache" checked> Remember results</label>
+        <button id="clearCache" style="padding:4px 10px;font-size:.85rem">Forget remembered results</button>
+      </div>
+      <div>
+        <label class="opt"><input type="checkbox" id="namesOn" checked> Also flag images that list cocktail drink names. Need at least
+          <input type="number" id="minNames" min="1" value="1"> name(s).</label>
+        <details>
+          <summary style="cursor:pointer;color:var(--muted)">Edit drink-name list (one per line or comma-separated)</summary>
+          <textarea id="names"></textarea>
+        </details>
+      </div>
     </div>
   </div>
 
@@ -100,7 +123,7 @@
     <div class="stats">
       <div class="stat"><b id="sTotal">0</b><span>Images</span></div>
       <div class="stat"><b id="sDone">0</b><span>Processed</span></div>
-      <div class="stat"><b id="sHit" style="color:var(--hit)">0</b><span>Contain Cocktail(s)</span></div>
+      <div class="stat"><b id="sHit" style="color:var(--hit)">0</b><span>Cocktail matches</span></div>
       <div class="stat"><b id="sMiss">0</b><span>No match</span></div>
       <div class="stat"><b id="sErr" style="color:var(--err)">0</b><span>Errors</span></div>
     </div>
@@ -115,7 +138,10 @@
     <button data-f="err">Errors</button>
     <span style="flex:1"></span>
     <button id="csvBtn" disabled>Export CSV</button>
-    <button id="copyBtn" disabled>Copy matched paths</button>
+    <button id="copyBtn" disabled>Copy matched folder names</button>
+  </div>
+  <div class="row" style="margin-top:10px">
+    <input type="search" id="search" placeholder="Search folder / file name…">
   </div>
   <div class="list" id="list"><div class="empty">No images loaded yet.</div></div>
 </main>
@@ -126,19 +152,96 @@ const IMG_RE = /\.(png|jpe?g|jfif|webp|bmp|gif|tiff?)$/i;
 const STRICT_RE = /cocktail(s?)/gi;
 // Tolerates OCR confusions: 0 for o, 1/l/|/! for i/l, @/4 for a, 5 for s, and a split "cock tail"/"cock-tail".
 const LENIENT_RE = /c[o0]ck[\s\-]?t[a@4][il1|!][il1|!]([s5]?)/gi;
+const DEFAULT_NAMES = `Mojito, Margarita, Martini, Negroni, Cosmopolitan, Daiquiri, Pina Colada, Bloody Mary,
+Long Island Iced Tea, Old Fashioned, Whiskey Sour, Whisky Sour, Pisco Sour, Amaretto Sour, Mai Tai,
+Caipirinha, Caipiroska, Mimosa, Bellini, Aperol Spritz, Sangria, Moscow Mule, Tom Collins, Gimlet,
+Sidecar, Mint Julep, Cuba Libre, Tequila Sunrise, Sex on the Beach, Blue Lagoon, Paloma, French 75,
+Gin Fizz, Kir Royale, White Russian, Black Russian, Singapore Sling, Mudslide, Bramble, Boulevardier,
+Sazerac, Manhattan, Irish Coffee, Hugo Spritz`;
 
-let items = [];          // {id, file, path, folder, name, url, status, cocktail, cocktails, snippet, text}
-let filter = 'all';
-let scheduler = null;
-let running = false;
+let items = [];          // {id, file, path, folder, name, url, status, cocktail, cocktails, names, snippet, text}
+let filter = 'all', query = '', limit = 200;
+let scheduler = null, running = false, startTime = 0, freshDone = 0;
 const $ = id => document.getElementById(id);
+const PAGE = 200;
 
-// ---------- worker count ----------
+// ---------- settings ----------
 const cores = navigator.hardwareConcurrency || 4;
-const defWorkers = Math.max(1, Math.min(4, cores - 1));
-for (let i = 1; i <= Math.max(6, defWorkers); i++) {
+const defWorkers = Math.max(1, Math.min(6, cores - 1));
+for (let i = 1; i <= Math.max(8, defWorkers); i++) {
   const o = new Option(i, i); if (i === defWorkers) o.selected = true; $('workers').add(o);
 }
+$('names').value = DEFAULT_NAMES;
+try {   // remember the user's settings
+  const s = JSON.parse(localStorage.getItem('cocktail-ocr-settings') || '{}');
+  if (typeof s.names === 'string') $('names').value = s.names;
+  for (const k of ['lenient', 'rotate', 'useCache', 'namesOn']) if (typeof s[k] === 'boolean') $(k).checked = s[k];
+  if (s.minNames) $('minNames').value = s.minNames;
+} catch {}
+function saveSettings() {
+  try {
+    localStorage.setItem('cocktail-ocr-settings', JSON.stringify({
+      names: $('names').value, minNames: $('minNames').value,
+      lenient: $('lenient').checked, rotate: $('rotate').checked, useCache: $('useCache').checked, namesOn: $('namesOn').checked }));
+  } catch {}
+}
+
+const norm = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+const keyOf = s => norm(s).toLowerCase().replace(/[\s\-]+/g, ' ').trim();
+let nameRe = null, nameDisplay = new Map();
+function buildNames() {
+  nameDisplay = new Map();
+  for (const n of $('names').value.split(/[,\n]/).map(s => s.trim()).filter(Boolean)) nameDisplay.set(keyOf(n), n);
+  const pats = [...nameDisplay.keys()].sort((a, b) => b.length - a.length)
+    .map(k => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/ /g, '[\\s\\-]+'));
+  nameRe = pats.length ? new RegExp('(?<![a-z])(?:' + pats.join('|') + ')(?![a-z])', 'gi') : null;
+}
+buildNames();
+
+let recheckTimer;
+for (const id of ['lenient', 'namesOn', 'minNames', 'names', 'rotate', 'useCache']) {
+  $(id).addEventListener('input', () => {
+    saveSettings();
+    clearTimeout(recheckTimer);
+    recheckTimer = setTimeout(() => {   // re-evaluate already-read text instantly, no new OCR needed
+      buildNames();
+      items.forEach(it => { if (it.status === 'hit' || it.status === 'miss') applyMatch(it); });
+      render(); updateStats();
+    }, 300);
+  });
+}
+
+// ---------- remembered results (IndexedDB) ----------
+let dbp = null;
+function db() {
+  if (!dbp) dbp = new Promise(res => {
+    try {
+      const r = indexedDB.open('cocktail-ocr', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('t');
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => res(null);
+    } catch { res(null); }
+  });
+  return dbp;
+}
+async function idb(mode, fn) {
+  const d = await db(); if (!d) return null;
+  return new Promise(res => {
+    try {
+      const q = fn(d.transaction('t', mode).objectStore('t'));
+      q.onsuccess = () => res(q.result ?? null); q.onerror = () => res(null);
+    } catch { res(null); }
+  });
+}
+const cacheGet = k => idb('readonly', s => s.get(k));
+const cachePut = (k, v) => idb('readwrite', s => s.put(v, k));
+const cacheKey = it => `${it.path}|${it.file.size}|${it.file.lastModified}`;
+$('clearCache').addEventListener('click', async () => {
+  if (!confirm('Forget all remembered OCR results? The next run will read every image again.')) return;
+  await idb('readwrite', s => s.clear());
+  $('clearCache').textContent = 'Forgotten ✓';
+  setTimeout(() => $('clearCache').textContent = 'Forget remembered results', 1500);
+});
 
 // ---------- loading files ----------
 function addFiles(list) {
@@ -149,18 +252,18 @@ function addFiles(list) {
     if (!IMG_RE.test(file.name)) continue;
     const parts = path.split('/');
     const name = parts.pop();
-    items.push({ id: items.length, file, path, folder: parts.join('/') || '(root)', name,
-                 url: URL.createObjectURL(file), status: 'wait', cocktail: 0, cocktails: 0, snippet: '', text: '' });
+    items.push({ file, path, name, folder: parts[parts.length - 1] || '(no folder)', parent: parts.join('/'),
+                 url: URL.createObjectURL(file), status: 'wait', cocktail: 0, cocktails: 0, names: [], snippet: '', text: '' });
   }
   items.sort((a, b) => a.path.localeCompare(b.path, undefined, { numeric: true }));
   items.forEach((it, i) => it.id = i);
-  const folders = new Set(items.map(i => i.folder)).size;
+  const folders = new Set(items.map(i => i.parent)).size;
   $('loaded').textContent = items.length
-    ? `${items.length} image${items.length > 1 ? 's' : ''} found in ${folders} folder${folders > 1 ? 's' : ''}.`
+    ? `${items.length.toLocaleString()} image${items.length > 1 ? 's' : ''} found in ${folders.toLocaleString()} folder${folders > 1 ? 's' : ''}.`
     : 'No supported images found (png, jpg, webp, bmp, gif, tiff).';
   $('startBtn').disabled = !items.length;
   $('status').textContent = items.length ? 'Ready. Press “Start OCR”.' : 'Waiting for images.';
-  render(); updateStats();
+  limit = PAGE; render(); updateStats();
 }
 
 $('dirInput').addEventListener('change', e => {
@@ -178,7 +281,7 @@ const drop = $('drop');
 drop.addEventListener('drop', async e => {
   const entries = [...e.dataTransfer.items].map(i => i.webkitGetAsEntry && i.webkitGetAsEntry()).filter(Boolean);
   if (!entries.length) { addFiles([...e.dataTransfer.files].map(f => ({ file: f, path: f.name }))); return; }
-  $('loaded').textContent = 'Reading folder…';
+  $('loaded').textContent = 'Reading folders…';
   const out = [];
   await Promise.all(entries.map(en => walk(en, '', out)));
   addFiles(out);
@@ -186,6 +289,7 @@ drop.addEventListener('drop', async e => {
 async function walk(entry, prefix, out) {
   const path = prefix ? prefix + '/' + entry.name : entry.name;
   if (entry.isFile) {
+    if (!IMG_RE.test(entry.name)) return;
     const file = await new Promise((res, rej) => entry.file(res, rej));
     out.push({ file, path });
   } else if (entry.isDirectory) {
@@ -202,8 +306,8 @@ async function walk(entry, prefix, out) {
 async function loadCanvas(file) {
   const bmp = await createImageBitmap(file);
   const maxDim = Math.max(bmp.width, bmp.height);
-  // Upscale small images (OCR likes ~30px+ text); cap very large ones to keep memory sane.
-  const scale = maxDim < 1600 ? Math.min(3, 1600 / maxDim) : Math.min(1, 4000 / maxDim);
+  // Upscale small images (OCR likes ~30px+ text); shrink huge phone photos to keep speed and memory sane.
+  const scale = maxDim < 1600 ? Math.min(3, 1600 / maxDim) : Math.min(1, 3000 / maxDim);
   const c = document.createElement('canvas');
   c.width = Math.round(bmp.width * scale); c.height = Math.round(bmp.height * scale);
   const ctx = c.getContext('2d');
@@ -224,6 +328,12 @@ function rotate(src, deg) {
 }
 
 // ---------- matching ----------
+const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function context(text, i, len) {
+  const s = Math.max(0, i - 40), e = Math.min(text.length, i + len + 40);
+  return ((s > 0 ? '…' : '') + esc(text.slice(s, i)) + '<mark>' + esc(text.slice(i, i + len)) + '</mark>' +
+          esc(text.slice(i + len, e)) + (e < text.length ? '…' : '')).replace(/\s+/g, ' ');
+}
 function findMatches(text) {
   const re = $('lenient').checked ? LENIENT_RE : STRICT_RE;
   re.lastIndex = 0;
@@ -232,16 +342,27 @@ function findMatches(text) {
     if (m[1]) cocktails++; else cocktail++;
     if (!first) first = m;
   }
-  let snippet = '';
-  if (first) {
-    const s = Math.max(0, first.index - 40), e = Math.min(text.length, first.index + first[0].length + 40);
-    snippet = (s > 0 ? '…' : '') + esc(text.slice(s, first.index)) + '<mark>' + esc(first[0]) + '</mark>' +
-              esc(text.slice(first.index + first[0].length, e)) + (e < text.length ? '…' : '');
-    snippet = snippet.replace(/\s+/g, ' ');
+  let snippet = first ? context(text, first.index, first[0].length) : '';
+  const names = [];
+  if ($('namesOn').checked && nameRe) {
+    const t = norm(text), seen = new Set();
+    nameRe.lastIndex = 0;
+    while ((m = nameRe.exec(t))) {
+      const k = keyOf(m[0]);
+      if (seen.has(k)) continue;
+      seen.add(k); names.push(nameDisplay.get(k) || m[0]);
+      if (!snippet) snippet = context(t, m.index, m[0].length);
+    }
   }
-  return { cocktail, cocktails, snippet };
+  return { cocktail, cocktails, names, snippet };
 }
-const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function isHit(r) {
+  return r.cocktail + r.cocktails > 0 || ($('namesOn').checked && r.names.length >= Math.max(1, +$('minNames').value || 1));
+}
+function applyMatch(it) {
+  Object.assign(it, findMatches(it.text));
+  it.status = isHit(it) ? 'hit' : 'miss';
+}
 
 // ---------- OCR run ----------
 $('startBtn').addEventListener('click', run);
@@ -252,18 +373,19 @@ async function run() {
     alert('The OCR engine could not be loaded. Please check your internet connection and reload the page.');
     return;
   }
-  running = true;
+  running = true; freshDone = 0;
   $('startBtn').disabled = true; $('stopBtn').disabled = false;
   $('csvBtn').disabled = true; $('copyBtn').disabled = true;
-  items.forEach(it => { it.status = 'wait'; it.cocktail = it.cocktails = 0; it.snippet = it.text = ''; });
+  buildNames();
+  items.forEach(it => { it.status = 'wait'; it.cocktail = it.cocktails = 0; it.names = []; it.snippet = it.text = ''; });
   render(); updateStats();
 
   const n = +$('workers').value;
-  $('status').textContent = `Loading OCR engine (${n} worker${n > 1 ? 's' : ''})… first run downloads ~10 MB of language data.`;
+  $('status').textContent = `Loading OCR engine (${n} worker${n > 1 ? 's' : ''})… the first run downloads ~10 MB of language data.`;
   try {
     scheduler = Tesseract.createScheduler();
     const timeout = new Promise((_, rej) => setTimeout(() =>
-      rej('timed out downloading the OCR language data — check your internet connection'), 120000));
+      rej('timed out downloading the OCR language data. Check your internet connection'), 120000));
     const workers = await Promise.race([
       Promise.all(Array.from({ length: n }, () => Tesseract.createWorker('eng'))), timeout]);
     workers.forEach(w => scheduler.addWorker(w));
@@ -272,118 +394,155 @@ async function run() {
     finish(); return;
   }
   if (!running) return;
-  $('status').textContent = 'Reading images…';
+  startTime = Date.now();
 
-  const tryRotations = $('rotate').checked;
-  await Promise.all(items.map(async it => {
-    try {
-      let src;
-      try { src = await loadCanvas(it.file); } catch { src = it.file; }  // let Tesseract decode (e.g. TIFF)
-      if (!running) return;
-      const { data } = await scheduler.addJob('recognize', src);
-      it.text = data.text || '';
-      Object.assign(it, findMatches(it.text));
-      if (tryRotations && !(it.cocktail + it.cocktails) && src instanceof HTMLCanvasElement) {
-        for (const deg of [90, 270, 180]) {
-          if (!running) return;
-          const r = await scheduler.addJob('recognize', rotate(src, deg));
-          const res = findMatches(r.data.text || '');
-          if (res.cocktail + res.cocktails) {
-            it.text = `[rotated ${deg}°]\n` + r.data.text; Object.assign(it, res); break;
-          }
-        }
-      }
-      it.status = (it.cocktail + it.cocktails) ? 'hit' : 'miss';
-    } catch (err) {
-      if (!running) return;
-      it.status = 'err'; it.text = String(err && err.message || err);
-    }
-    if (running) { updateItem(it); updateStats(); }
-  }));
+  // A fixed number of lanes pull images one at a time, so only a few images are in memory at once.
+  let next = 0;
+  const lane = async () => {
+    while (running && next < items.length) await processItem(items[next++]);
+  };
+  await Promise.all(Array.from({ length: n + 1 }, lane));
 
   if (running) {
     const hits = items.filter(i => i.status === 'hit').length;
-    $('status').textContent = `Done. ${hits} of ${items.length} images contain “Cocktail” / “Cocktails”.`;
+    $('status').textContent = `Done. ${hits.toLocaleString()} of ${items.length.toLocaleString()} images match.`;
   }
   finish();
+}
+
+async function processItem(it) {
+  const key = cacheKey(it), useCache = $('useCache').checked, wantRot = $('rotate').checked;
+  try {
+    const rec = useCache ? await cacheGet(key) : null;
+    if (rec && (!wantRot || rec.rot || isHit(findMatches(rec.text)))) {
+      it.text = rec.text;
+    } else {
+      let src;
+      try { src = await loadCanvas(it.file); } catch { src = it.file; }  // let Tesseract decode it (e.g. TIFF)
+      if (!running) return;
+      const { data } = await scheduler.addJob('recognize', src);
+      let text = data.text || '', rotTried = false;
+      if (wantRot && !isHit(findMatches(text)) && src instanceof HTMLCanvasElement) {
+        rotTried = true;
+        for (const deg of [90, 270, 180]) {
+          if (!running) return;
+          const r = await scheduler.addJob('recognize', rotate(src, deg));
+          if (isHit(findMatches(r.data.text || ''))) { text = `[rotated ${deg}°]\n` + r.data.text; break; }
+        }
+      }
+      if (src instanceof HTMLCanvasElement) src.width = src.height = 0;   // release memory
+      it.text = text;
+      freshDone++;
+      if (useCache) cachePut(key, { text, rot: rotTried });
+    }
+    applyMatch(it);
+  } catch (err) {
+    if (!running) return;
+    it.status = 'err'; it.text = String(err && err.message || err);
+  }
+  if (running) { updateItem(it); updateStats(); }
 }
 
 async function stop() {
   if (!running) return;
   running = false;
-  $('status').textContent = 'Stopped.';
-  if (scheduler) { try { await scheduler.terminate(); } catch {} }
-  scheduler = null;
+  $('status').textContent = 'Stopped. Remembered results are kept, so the next run continues where this one left off.';
   finish();
 }
 async function finish() {
   running = false;
-  if (scheduler) { try { await scheduler.terminate(); } catch {} scheduler = null; }
+  const s = scheduler; scheduler = null;
+  if (s) { try { await s.terminate(); } catch {} }
   $('startBtn').disabled = !items.length; $('stopBtn').disabled = true;
-  const anyDone = items.some(i => i.status !== 'wait');
-  $('csvBtn').disabled = !anyDone; $('copyBtn').disabled = !items.some(i => i.status === 'hit');
+  $('csvBtn').disabled = !items.some(i => i.status !== 'wait');
+  $('copyBtn').disabled = !items.some(i => i.status === 'hit');
   render(); updateStats();
 }
 
 // ---------- UI ----------
 function updateStats() {
-  const c = s => items.filter(i => i.status === s).length;
-  const done = items.length - c('wait');
-  $('sTotal').textContent = items.length; $('sDone').textContent = done;
-  $('sHit').textContent = c('hit'); $('sMiss').textContent = c('miss'); $('sErr').textContent = c('err');
+  let wait = 0, hit = 0, miss = 0, err = 0;
+  for (const i of items) i.status === 'wait' ? wait++ : i.status === 'hit' ? hit++ : i.status === 'miss' ? miss++ : err++;
+  const done = items.length - wait;
+  $('sTotal').textContent = items.length.toLocaleString(); $('sDone').textContent = done.toLocaleString();
+  $('sHit').textContent = hit.toLocaleString(); $('sMiss').textContent = miss.toLocaleString(); $('sErr').textContent = err.toLocaleString();
   $('progress').style.width = items.length ? (100 * done / items.length) + '%' : '0';
-  if (running && done) $('status').textContent = `Processing… ${done} / ${items.length}`;
-}
-function badge(it) {
-  if (it.status === 'hit') {
-    const parts = [];
-    if (it.cocktail) parts.push(`“Cocktail” ×${it.cocktail}`);
-    if (it.cocktails) parts.push(`“Cocktails” ×${it.cocktails}`);
-    return `<span class="badge b-hit">✓ ${parts.join(' · ')}</span>`;
+  if (running && done) {
+    let eta = '';
+    if (freshDone >= 3) {
+      const mins = Math.ceil((Date.now() - startTime) / freshDone * wait / 60000);
+      eta = ` · about ${mins < 60 ? mins + ' min' : (mins / 60).toFixed(1) + ' h'} left`;
+    }
+    $('status').textContent = `Processing… ${done.toLocaleString()} / ${items.length.toLocaleString()}${eta}`;
+    $('csvBtn').disabled = false;   // allow exporting partial results mid-run
   }
-  if (it.status === 'miss') return `<span class="badge b-miss">No match</span>`;
+}
+function badges(it) {
   if (it.status === 'err') return `<span class="badge b-err">Error</span>`;
-  return `<span class="badge b-wait">${running ? 'Queued…' : 'Not scanned'}</span>`;
+  if (it.status === 'wait') return `<span class="badge b-wait">${running ? 'Queued…' : 'Not scanned'}</span>`;
+  let h = '';
+  const words = [];
+  if (it.cocktail) words.push(`“Cocktail” ×${it.cocktail}`);
+  if (it.cocktails) words.push(`“Cocktails” ×${it.cocktails}`);
+  if (words.length) h += `<span class="badge b-hit">✓ ${words.join(' · ')}</span>`;
+  if (it.names.length) {
+    const shown = it.names.slice(0, 6).join(', ') + (it.names.length > 6 ? ` +${it.names.length - 6} more` : '');
+    h += `<span class="badge ${it.status === 'hit' ? 'b-name' : 'b-miss'}">🍸 ${it.names.length} drink name${it.names.length > 1 ? 's' : ''}: ${esc(shown)}</span>`;
+  }
+  if (it.status === 'miss' && !it.names.length) h += `<span class="badge b-miss">No match</span>`;
+  else if (it.status === 'miss') h += `<span class="badge b-miss">below threshold</span>`;
+  return h;
 }
 function itemHTML(it) {
   return `<img loading="lazy" src="${it.url}" alt="" data-full="${it.url}">
     <div class="info">
-      <div class="name">${esc(it.name)}</div>
-      <div class="folder">📁 ${esc(it.folder)}</div>
-      ${badge(it)}
+      <div class="name">${esc(it.folder)}</div>
+      <div class="folder">${esc(it.name)} · ${esc(it.parent || '(root)')}</div>
+      ${badges(it)}
       ${it.snippet ? `<div class="snip">${it.snippet}</div>` : ''}
       ${it.text ? `<details><summary>OCR text</summary><pre>${esc(it.text)}</pre></details>` : ''}
     </div>`;
 }
-function visible(it) { return filter === 'all' || it.status === filter; }
+function visible(it) {
+  return (filter === 'all' || it.status === filter) && (!query || it.path.toLowerCase().includes(query));
+}
+let renderTimer = null;
+function scheduleRender() { if (!renderTimer) renderTimer = setTimeout(() => { renderTimer = null; render(); }, 500); }
 function render() {
   const list = $('list');
-  const shown = items.filter(visible);
-  if (!shown.length) {
+  const all = items.filter(visible);
+  if (!all.length) {
     list.innerHTML = `<div class="empty">${items.length ? 'Nothing in this view.' : 'No images loaded yet.'}</div>`;
     return;
   }
   list.innerHTML = '';
   const frag = document.createDocumentFragment();
-  for (const it of shown) {
+  for (const it of all.slice(0, limit)) {
     const d = document.createElement('div');
     d.className = 'item'; d.id = 'it' + it.id; d.innerHTML = itemHTML(it);
     frag.appendChild(d);
+  }
+  if (all.length > limit) {
+    const b = document.createElement('button');
+    b.id = 'more'; b.textContent = `Show more (${(all.length - limit).toLocaleString()} remaining)`;
+    b.onclick = () => { limit += PAGE; render(); };
+    frag.appendChild(b);
   }
   list.appendChild(frag);
 }
 function updateItem(it) {
   const el = $('it' + it.id);
-  if (!visible(it)) { if (el) el.remove(); return; }
-  if (el) el.innerHTML = itemHTML(it); else render();
+  if (el && visible(it)) el.innerHTML = itemHTML(it);
+  else if (el || (visible(it) && filter !== 'all')) scheduleRender();
 }
 
 $('tabs').addEventListener('click', e => {
   const f = e.target.dataset && e.target.dataset.f; if (!f) return;
-  filter = f;
+  filter = f; limit = PAGE;
   document.querySelectorAll('#tabs [data-f]').forEach(b => b.classList.toggle('active', b.dataset.f === f));
   render();
 });
+$('search').addEventListener('input', e => { query = e.target.value.trim().toLowerCase(); limit = PAGE; scheduleRender(); });
 $('list').addEventListener('click', e => {
   if (e.target.dataset.full) { $('viewer').querySelector('img').src = e.target.dataset.full; $('viewer').style.display = 'flex'; }
 });
@@ -391,22 +550,22 @@ $('viewer').addEventListener('click', () => $('viewer').style.display = 'none');
 
 $('csvBtn').addEventListener('click', () => {
   const q = v => '"' + String(v).replace(/"/g, '""') + '"';
-  const rows = [['folder', 'file', 'path', 'result', 'cocktail_count', 'cocktails_count', 'context']];
+  const plain = s => s.replace(/<\/?mark>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+  const rows = [['folder_name', 'file', 'path', 'result', 'cocktail_word_count', 'cocktails_word_count', 'drink_names_found', 'context']];
   for (const it of items) {
-    const ctx = it.snippet.replace(/<\/?mark>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
     const result = { hit: 'MATCH', miss: 'no match', err: 'error', wait: 'not scanned' }[it.status];
-    rows.push([it.folder, it.name, it.path, result, it.cocktail, it.cocktails, ctx]);
+    rows.push([it.folder, it.name, it.path, result, it.cocktail, it.cocktails, it.names.join('; '), plain(it.snippet)]);
   }
-  const blob = new Blob(['﻿' + rows.map(r => r.map(q).join(',')).join('\r\n')], { type: 'text/csv' });
+  const blob = new Blob(['\ufeff' + rows.map(r => r.map(q).join(',')).join('\r\n')], { type: 'text/csv' });
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob); a.download = 'cocktail-ocr-results.csv'; a.click();
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 });
 $('copyBtn').addEventListener('click', async () => {
-  const txt = items.filter(i => i.status === 'hit').map(i => i.path).join('\n');
+  const txt = [...new Set(items.filter(i => i.status === 'hit').map(i => i.folder))].join('\n');
   try { await navigator.clipboard.writeText(txt); $('copyBtn').textContent = 'Copied!'; }
-  catch { prompt('Copy these paths:', txt); }
-  setTimeout(() => $('copyBtn').textContent = 'Copy matched paths', 1500);
+  catch { prompt('Copy these folder names:', txt); }
+  setTimeout(() => $('copyBtn').textContent = 'Copy matched folder names', 1500);
 });
 </script>
 </body>
