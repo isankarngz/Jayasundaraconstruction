@@ -1,0 +1,22 @@
+COCKTAIL FINDER - quick start
+=============================
+
+You need (one-time install):
+  1. Python 3.10 or newer   https://www.python.org/downloads/
+       Windows: tick "Add python.exe to PATH" in the installer.
+  2. Tesseract OCR (second OCR engine, strongly recommended)
+       Windows: https://github.com/UB-Mannheim/tesseract/wiki  (default install location is fine)
+       Mac:     brew install tesseract
+       Linux:   sudo apt install tesseract-ocr
+
+Then start the app:
+  Windows:      double-click  start-windows.bat
+  Mac / Linux:  double-click  start-mac-linux.command
+                (Mac: if it is blocked, right-click it > Open. Or run it in Terminal.)
+
+The first start installs the Python packages (needs internet once, a few minutes).
+Your browser then opens http://127.0.0.1:8000 . Keep the black window open while using the app;
+close it to stop. Your images and results are saved in the "data" folder and are still there next time.
+
+Everything runs on your computer. No images are uploaded to the internet.
+Full documentation: README.md
