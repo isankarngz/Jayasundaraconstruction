@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cocktail OCR Finder</title>
+<!-- OCR engine (runs entirely in your browser; needs internet once to load the engine + English data) -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+<style>
+  :root {
+    --bg: #f6f7f9; --panel: #ffffff; --text: #1b1f24; --muted: #5f6b7a; --border: #dde2e8;
+    --accent: #2f6fde; --accent-text: #ffffff; --hit: #1f8a4c; --hit-bg: #e3f5ea;
+    --miss: #6b7480; --miss-bg: #eef0f3; --err: #c23b3b; --err-bg: #fbe7e7; --mark: #ffe58a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #121417; --panel: #1b1e23; --text: #e6e9ee; --muted: #9aa4b2; --border: #2c3138;
+      --accent: #5b8ff0; --accent-text: #0d1117; --hit: #5fd08f; --hit-bg: #17321f;
+      --miss: #9aa4b2; --miss-bg: #23272e; --err: #ff8080; --err-bg: #3a1c1c; --mark: #7a6514;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  main { max-width: 1100px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin: 0 0 20px; }
+  .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  .drop { border: 2px dashed var(--border); border-radius: 10px; padding: 28px 16px; text-align: center; color: var(--muted); transition: .15s; }
+  .drop.over { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .row + .row { margin-top: 12px; }
+  button, .btn { font: inherit; border: 1px solid var(--border); background: var(--panel); color: var(--text);
+                 padding: 8px 14px; border-radius: 8px; cursor: pointer; }
+  button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 600; }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  label.opt { display: inline-flex; gap: 6px; align-items: center; color: var(--muted); font-size: .9rem; }
+  select { font: inherit; padding: 4px 6px; border-radius: 6px; border: 1px solid var(--border); background: var(--panel); color: var(--text); }
+  input[type=file] { display: none; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; }
+  .stat { background: var(--bg); border-radius: 8px; padding: 10px 12px; }
+  .stat b { display: block; font-size: 1.4rem; }
+  .stat span { color: var(--muted); font-size: .85rem; }
+  .bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; margin-top: 12px; }
+  .bar > div { height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+  .tabs button.active { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+  .item { display: flex; gap: 12px; align-items: flex-start; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 10px; }
+  .item img { width: 72px; height: 72px; object-fit: contain; border-radius: 6px; background: var(--bg); flex: none; cursor: zoom-in; }
+  .info { min-width: 0; flex: 1; }
+  .name { font-weight: 600; word-break: break-all; }
+  .folder { color: var(--muted); font-size: .85rem; word-break: break-all; }
+  .badge { display: inline-block; font-size: .8rem; font-weight: 600; padding: 2px 8px; border-radius: 999px; margin-top: 4px; }
+  .b-hit { color: var(--hit); background: var(--hit-bg); }
+  .b-miss { color: var(--miss); background: var(--miss-bg); }
+  .b-err { color: var(--err); background: var(--err-bg); }
+  .b-wait { color: var(--muted); background: var(--bg); }
+  .snip { font-size: .85rem; color: var(--muted); margin-top: 4px; word-break: break-word; }
+  mark { background: var(--mark); color: inherit; border-radius: 2px; padding: 0 1px; }
+  details { margin-top: 4px; font-size: .85rem; }
+  details pre { white-space: pre-wrap; word-break: break-word; background: var(--bg); padding: 8px; border-radius: 6px; max-height: 240px; overflow: auto; }
+  .empty { color: var(--muted); text-align: center; padding: 20px; }
+  #viewer { position: fixed; inset: 0; background: rgba(0,0,0,.85); display: none; align-items: center; justify-content: center; z-index: 10; cursor: zoom-out; }
+  #viewer img { max-width: 95vw; max-height: 95vh; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Cocktail OCR Finder</h1>
+  <p class="sub">Pick your images folder (sub-folders included). Each image is read with OCR and flagged if it contains “Cocktail” and/or “Cocktails”. Nothing is uploaded; everything runs in this browser.</p>
+
+  <div class="panel">
+    <div class="drop" id="drop">
+      <div style="font-size:1.05rem;margin-bottom:10px">Drag &amp; drop a folder here, or</div>
+      <div class="row" style="justify-content:center">
+        <label class="btn" for="dirInput">Choose folder…</label>
+        <label class="btn" for="fileInput">Choose image files…</label>
+      </div>
+      <input type="file" id="dirInput" webkitdirectory directory multiple>
+      <input type="file" id="fileInput" accept="image/*" multiple>
+      <div id="loaded" style="margin-top:10px"></div>
+    </div>
+
+    <div class="row" style="margin-top:14px">
+      <button class="primary" id="startBtn" disabled>Start OCR</button>
+      <button id="stopBtn" disabled>Stop</button>
+      <label class="opt">Parallel workers
+        <select id="workers"></select>
+      </label>
+      <label class="opt" title="Also catch common OCR misreads like C0CKTA1L or 'cock tail'">
+        <input type="checkbox" id="lenient" checked> Lenient matching
+      </label>
+      <label class="opt" title="If nothing is found, retry the image rotated 90°, 180° and 270° (slower)">
+        <input type="checkbox" id="rotate"> Try rotated images
+      </label>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="stats">
+      <div class="stat"><b id="sTotal">0</b><span>Images</span></div>
+      <div class="stat"><b id="sDone">0</b><span>Processed</span></div>
+      <div class="stat"><b id="sHit" style="color:var(--hit)">0</b><span>Contain Cocktail(s)</span></div>
+      <div class="stat"><b id="sMiss">0</b><span>No match</span></div>
+      <div class="stat"><b id="sErr" style="color:var(--err)">0</b><span>Errors</span></div>
+    </div>
+    <div class="bar"><div id="progress"></div></div>
+    <div id="status" class="folder" style="margin-top:6px">Waiting for images.</div>
+  </div>
+
+  <div class="row tabs" id="tabs">
+    <button data-f="all" class="active">All</button>
+    <button data-f="hit">Matches</button>
+    <button data-f="miss">No match</button>
+    <button data-f="err">Errors</button>
+    <span style="flex:1"></span>
+    <button id="csvBtn" disabled>Export CSV</button>
+    <button id="copyBtn" disabled>Copy matched paths</button>
+  </div>
+  <div class="list" id="list"><div class="empty">No images loaded yet.</div></div>
+</main>
+<div id="viewer"><img alt=""></div>
+
+<script>
+const IMG_RE = /\.(png|jpe?g|jfif|webp|bmp|gif|tiff?)$/i;
+const STRICT_RE = /cocktail(s?)/gi;
+// Tolerates OCR confusions: 0 for o, 1/l/|/! for i/l, @/4 for a, 5 for s, and a split "cock tail"/"cock-tail".
+const LENIENT_RE = /c[o0]ck[\s\-]?t[a@4][il1|!][il1|!]([s5]?)/gi;
+
+let items = [];          // {id, file, path, folder, name, url, status, cocktail, cocktails, snippet, text}
+let filter = 'all';
+let scheduler = null;
+let running = false;
+const $ = id => document.getElementById(id);
+
+// ---------- worker count ----------
+const cores = navigator.hardwareConcurrency || 4;
+const defWorkers = Math.max(1, Math.min(4, cores - 1));
+for (let i = 1; i <= Math.max(6, defWorkers); i++) {
+  const o = new Option(i, i); if (i === defWorkers) o.selected = true; $('workers').add(o);
+}
+
+// ---------- loading files ----------
+function addFiles(list) {
+  if (running) return;
+  for (const it of items) URL.revokeObjectURL(it.url);
+  items = [];
+  for (const { file, path } of list) {
+    if (!IMG_RE.test(file.name)) continue;
+    const parts = path.split('/');
+    const name = parts.pop();
+    items.push({ id: items.length, file, path, folder: parts.join('/') || '(root)', name,
+                 url: URL.createObjectURL(file), status: 'wait', cocktail: 0, cocktails: 0, snippet: '', text: '' });
+  }
+  items.sort((a, b) => a.path.localeCompare(b.path, undefined, { numeric: true }));
+  items.forEach((it, i) => it.id = i);
+  const folders = new Set(items.map(i => i.folder)).size;
+  $('loaded').textContent = items.length
+    ? `${items.length} image${items.length > 1 ? 's' : ''} found in ${folders} folder${folders > 1 ? 's' : ''}.`
+    : 'No supported images found (png, jpg, webp, bmp, gif, tiff).';
+  $('startBtn').disabled = !items.length;
+  $('status').textContent = items.length ? 'Ready. Press “Start OCR”.' : 'Waiting for images.';
+  render(); updateStats();
+}
+
+$('dirInput').addEventListener('change', e => {
+  addFiles([...e.target.files].map(f => ({ file: f, path: f.webkitRelativePath || f.name })));
+  e.target.value = '';
+});
+$('fileInput').addEventListener('change', e => {
+  addFiles([...e.target.files].map(f => ({ file: f, path: f.name })));
+  e.target.value = '';
+});
+
+const drop = $('drop');
+['dragenter', 'dragover'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.add('over'); }));
+['dragleave', 'drop'].forEach(t => drop.addEventListener(t, e => { e.preventDefault(); drop.classList.remove('over'); }));
+drop.addEventListener('drop', async e => {
+  const entries = [...e.dataTransfer.items].map(i => i.webkitGetAsEntry && i.webkitGetAsEntry()).filter(Boolean);
+  if (!entries.length) { addFiles([...e.dataTransfer.files].map(f => ({ file: f, path: f.name }))); return; }
+  $('loaded').textContent = 'Reading folder…';
+  const out = [];
+  await Promise.all(entries.map(en => walk(en, '', out)));
+  addFiles(out);
+});
+async function walk(entry, prefix, out) {
+  const path = prefix ? prefix + '/' + entry.name : entry.name;
+  if (entry.isFile) {
+    const file = await new Promise((res, rej) => entry.file(res, rej));
+    out.push({ file, path });
+  } else if (entry.isDirectory) {
+    const reader = entry.createReader();
+    let batch;
+    do {   // readEntries returns results in chunks
+      batch = await new Promise((res, rej) => reader.readEntries(res, rej));
+      await Promise.all(batch.map(en => walk(en, path, out)));
+    } while (batch.length);
+  }
+}
+
+// ---------- image prep ----------
+async function loadCanvas(file) {
+  const bmp = await createImageBitmap(file);
+  const maxDim = Math.max(bmp.width, bmp.height);
+  // Upscale small images (OCR likes ~30px+ text); cap very large ones to keep memory sane.
+  const scale = maxDim < 1600 ? Math.min(3, 1600 / maxDim) : Math.min(1, 4000 / maxDim);
+  const c = document.createElement('canvas');
+  c.width = Math.round(bmp.width * scale); c.height = Math.round(bmp.height * scale);
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);   // flatten transparency
+  ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(bmp, 0, 0, c.width, c.height);
+  bmp.close && bmp.close();
+  return c;
+}
+function rotate(src, deg) {
+  const c = document.createElement('canvas');
+  const swap = deg % 180 !== 0;
+  c.width = swap ? src.height : src.width; c.height = swap ? src.width : src.height;
+  const ctx = c.getContext('2d');
+  ctx.translate(c.width / 2, c.height / 2); ctx.rotate(deg * Math.PI / 180);
+  ctx.drawImage(src, -src.width / 2, -src.height / 2);
+  return c;
+}
+
+// ---------- matching ----------
+function findMatches(text) {
+  const re = $('lenient').checked ? LENIENT_RE : STRICT_RE;
+  re.lastIndex = 0;
+  let m, cocktail = 0, cocktails = 0, first = null;
+  while ((m = re.exec(text))) {
+    if (m[1]) cocktails++; else cocktail++;
+    if (!first) first = m;
+  }
+  let snippet = '';
+  if (first) {
+    const s = Math.max(0, first.index - 40), e = Math.min(text.length, first.index + first[0].length + 40);
+    snippet = (s > 0 ? '…' : '') + esc(text.slice(s, first.index)) + '<mark>' + esc(first[0]) + '</mark>' +
+              esc(text.slice(first.index + first[0].length, e)) + (e < text.length ? '…' : '');
+    snippet = snippet.replace(/\s+/g, ' ');
+  }
+  return { cocktail, cocktails, snippet };
+}
+const esc = s => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+// ---------- OCR run ----------
+$('startBtn').addEventListener('click', run);
+$('stopBtn').addEventListener('click', stop);
+
+async function run() {
+  if (typeof Tesseract === 'undefined') {
+    alert('The OCR engine could not be loaded. Please check your internet connection and reload the page.');
+    return;
+  }
+  running = true;
+  $('startBtn').disabled = true; $('stopBtn').disabled = false;
+  $('csvBtn').disabled = true; $('copyBtn').disabled = true;
+  items.forEach(it => { it.status = 'wait'; it.cocktail = it.cocktails = 0; it.snippet = it.text = ''; });
+  render(); updateStats();
+
+  const n = +$('workers').value;
+  $('status').textContent = `Loading OCR engine (${n} worker${n > 1 ? 's' : ''})… first run downloads ~10 MB of language data.`;
+  try {
+    scheduler = Tesseract.createScheduler();
+    const timeout = new Promise((_, rej) => setTimeout(() =>
+      rej('timed out downloading the OCR language data — check your internet connection'), 120000));
+    const workers = await Promise.race([
+      Promise.all(Array.from({ length: n }, () => Tesseract.createWorker('eng'))), timeout]);
+    workers.forEach(w => scheduler.addWorker(w));
+  } catch (err) {
+    $('status').textContent = 'Failed to start OCR engine: ' + err;
+    finish(); return;
+  }
+  if (!running) return;
+  $('status').textContent = 'Reading images…';
+
+  const tryRotations = $('rotate').checked;
+  await Promise.all(items.map(async it => {
+    try {
+      let src;
+      try { src = await loadCanvas(it.file); } catch { src = it.file; }  // let Tesseract decode (e.g. TIFF)
+      if (!running) return;
+      const { data } = await scheduler.addJob('recognize', src);
+      it.text = data.text || '';
+      Object.assign(it, findMatches(it.text));
+      if (tryRotations && !(it.cocktail + it.cocktails) && src instanceof HTMLCanvasElement) {
+        for (const deg of [90, 270, 180]) {
+          if (!running) return;
+          const r = await scheduler.addJob('recognize', rotate(src, deg));
+          const res = findMatches(r.data.text || '');
+          if (res.cocktail + res.cocktails) {
+            it.text = `[rotated ${deg}°]\n` + r.data.text; Object.assign(it, res); break;
+          }
+        }
+      }
+      it.status = (it.cocktail + it.cocktails) ? 'hit' : 'miss';
+    } catch (err) {
+      if (!running) return;
+      it.status = 'err'; it.text = String(err && err.message || err);
+    }
+    if (running) { updateItem(it); updateStats(); }
+  }));
+
+  if (running) {
+    const hits = items.filter(i => i.status === 'hit').length;
+    $('status').textContent = `Done. ${hits} of ${items.length} images contain “Cocktail” / “Cocktails”.`;
+  }
+  finish();
+}
+
+async function stop() {
+  if (!running) return;
+  running = false;
+  $('status').textContent = 'Stopped.';
+  if (scheduler) { try { await scheduler.terminate(); } catch {} }
+  scheduler = null;
+  finish();
+}
+async function finish() {
+  running = false;
+  if (scheduler) { try { await scheduler.terminate(); } catch {} scheduler = null; }
+  $('startBtn').disabled = !items.length; $('stopBtn').disabled = true;
+  const anyDone = items.some(i => i.status !== 'wait');
+  $('csvBtn').disabled = !anyDone; $('copyBtn').disabled = !items.some(i => i.status === 'hit');
+  render(); updateStats();
+}
+
+// ---------- UI ----------
+function updateStats() {
+  const c = s => items.filter(i => i.status === s).length;
+  const done = items.length - c('wait');
+  $('sTotal').textContent = items.length; $('sDone').textContent = done;
+  $('sHit').textContent = c('hit'); $('sMiss').textContent = c('miss'); $('sErr').textContent = c('err');
+  $('progress').style.width = items.length ? (100 * done / items.length) + '%' : '0';
+  if (running && done) $('status').textContent = `Processing… ${done} / ${items.length}`;
+}
+function badge(it) {
+  if (it.status === 'hit') {
+    const parts = [];
+    if (it.cocktail) parts.push(`“Cocktail” ×${it.cocktail}`);
+    if (it.cocktails) parts.push(`“Cocktails” ×${it.cocktails}`);
+    return `<span class="badge b-hit">✓ ${parts.join(' · ')}</span>`;
+  }
+  if (it.status === 'miss') return `<span class="badge b-miss">No match</span>`;
+  if (it.status === 'err') return `<span class="badge b-err">Error</span>`;
+  return `<span class="badge b-wait">${running ? 'Queued…' : 'Not scanned'}</span>`;
+}
+function itemHTML(it) {
+  return `<img loading="lazy" src="${it.url}" alt="" data-full="${it.url}">
+    <div class="info">
+      <div class="name">${esc(it.name)}</div>
+      <div class="folder">📁 ${esc(it.folder)}</div>
+      ${badge(it)}
+      ${it.snippet ? `<div class="snip">${it.snippet}</div>` : ''}
+      ${it.text ? `<details><summary>OCR text</summary><pre>${esc(it.text)}</pre></details>` : ''}
+    </div>`;
+}
+function visible(it) { return filter === 'all' || it.status === filter; }
+function render() {
+  const list = $('list');
+  const shown = items.filter(visible);
+  if (!shown.length) {
+    list.innerHTML = `<div class="empty">${items.length ? 'Nothing in this view.' : 'No images loaded yet.'}</div>`;
+    return;
+  }
+  list.innerHTML = '';
+  const frag = document.createDocumentFragment();
+  for (const it of shown) {
+    const d = document.createElement('div');
+    d.className = 'item'; d.id = 'it' + it.id; d.innerHTML = itemHTML(it);
+    frag.appendChild(d);
+  }
+  list.appendChild(frag);
+}
+function updateItem(it) {
+  const el = $('it' + it.id);
+  if (!visible(it)) { if (el) el.remove(); return; }
+  if (el) el.innerHTML = itemHTML(it); else render();
+}
+
+$('tabs').addEventListener('click', e => {
+  const f = e.target.dataset && e.target.dataset.f; if (!f) return;
+  filter = f;
+  document.querySelectorAll('#tabs [data-f]').forEach(b => b.classList.toggle('active', b.dataset.f === f));
+  render();
+});
+$('list').addEventListener('click', e => {
+  if (e.target.dataset.full) { $('viewer').querySelector('img').src = e.target.dataset.full; $('viewer').style.display = 'flex'; }
+});
+$('viewer').addEventListener('click', () => $('viewer').style.display = 'none');
+
+$('csvBtn').addEventListener('click', () => {
+  const q = v => '"' + String(v).replace(/"/g, '""') + '"';
+  const rows = [['folder', 'file', 'path', 'result', 'cocktail_count', 'cocktails_count', 'context']];
+  for (const it of items) {
+    const ctx = it.snippet.replace(/<\/?mark>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&amp;/g, '&');
+    const result = { hit: 'MATCH', miss: 'no match', err: 'error', wait: 'not scanned' }[it.status];
+    rows.push([it.folder, it.name, it.path, result, it.cocktail, it.cocktails, ctx]);
+  }
+  const blob = new Blob(['﻿' + rows.map(r => r.map(q).join(',')).join('\r\n')], { type: 'text/csv' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = 'cocktail-ocr-results.csv'; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+$('copyBtn').addEventListener('click', async () => {
+  const txt = items.filter(i => i.status === 'hit').map(i => i.path).join('\n');
+  try { await navigator.clipboard.writeText(txt); $('copyBtn').textContent = 'Copied!'; }
+  catch { prompt('Copy these paths:', txt); }
+  setTimeout(() => $('copyBtn').textContent = 'Copy matched paths', 1500);
+});
+</script>
+</body>
+</html>
